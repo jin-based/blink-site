@@ -1,0 +1,362 @@
+<title>Blink for Mac</title>
+<meta name="description" content="A small ghost in your notch that keeps your Stash.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap">
+<style>
+  :root {
+    --bg: #0a0a0b;
+    --bg-raise: #141416;
+    --panel: #050506;
+    --line: rgba(255,255,255,.09);
+    --line-strong: rgba(255,255,255,.16);
+    --ink: #f4f4f2;
+    --ink-dim: #a0a1a6;
+    --ink-faint: #6c6d73;
+    --ghost: #fbfbf9;
+    --ghost-shade: #e3e3df;
+    --amber: #f5a524;
+    --amber-soft: #ffcf7a;
+    --slate: #9ea8b8;
+    --radius: 16px;
+    --maxw: 1080px;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, .display { font-family: "Nunito", -apple-system, system-ui, sans-serif; }
+  a { color: inherit; }
+  img { max-width: 100%; }
+  .wrap { width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: 22px; }
+  .eyebrow {
+    font-family: "Nunito", system-ui, sans-serif;
+    font-weight: 800; font-size: 12px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--amber);
+  }
+
+  /* ---- top notch bar (the product's own surface) ---- */
+  .menubar {
+    position: sticky; top: 0; z-index: 20;
+    height: 34px; background: #000;
+    display: flex; align-items: center; justify-content: center;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+  }
+  .notch {
+    position: relative;
+    width: 190px; height: 34px; background: #000;
+    border-radius: 0 0 13px 13px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 1px 0 rgba(255,255,255,.04);
+  }
+  .notch .mini { width: 22px; height: 26px; }
+  .menubar .side {
+    position: absolute; font-size: 12px; color: var(--ink-faint);
+    font-weight: 600; letter-spacing: .01em;
+  }
+  .menubar .side.l { left: 18px; }
+  .menubar .side.r { right: 18px; display: flex; gap: 14px; }
+
+  /* ---- hero ---- */
+  .hero { position: relative; overflow: hidden; padding-block: 66px 40px; }
+  .hero::before {
+    content: ""; position: absolute; inset: -30% 0 auto 0; height: 460px;
+    background: radial-gradient(60% 80% at 50% 0%, rgba(245,165,36,.10), transparent 70%);
+    pointer-events: none;
+  }
+  .hero .wrap { position: relative; display: grid; gap: 30px; justify-items: center; text-align: center; }
+  .ghost-stage { position: relative; width: 132px; height: 150px; display: grid; place-items: center; }
+  .ghost-stage .halo {
+    position: absolute; width: 190px; height: 190px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(245,165,36,.16), transparent 62%);
+    filter: blur(4px);
+  }
+  .ghost-hero { width: 118px; height: 134px; position: relative; }
+  h1 { margin: 0; font-weight: 900; font-size: clamp(46px, 9vw, 88px); letter-spacing: -.02em; line-height: .95; text-wrap: balance; }
+  .lede { margin: 0; max-width: 30ch; font-size: clamp(18px, 2.4vw, 22px); color: var(--ink-dim); text-wrap: balance; }
+  .cta-row { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: "Nunito", system-ui, sans-serif; font-weight: 800; font-size: 16px;
+    padding: 13px 22px; border-radius: 13px; text-decoration: none; border: 1px solid transparent;
+    transition: transform .15s ease, background .15s ease, border-color .15s ease;
+  }
+  .btn-primary { background: var(--amber); color: #201400; }
+  .btn-primary:hover { transform: translateY(-2px); background: var(--amber-soft); }
+  .btn-ghost { border-color: var(--line-strong); color: var(--ink); }
+  .btn-ghost:hover { border-color: var(--ink-dim); transform: translateY(-2px); }
+  .btn small { font-weight: 700; opacity: .7; font-size: 13px; }
+  .meta { font-size: 13.5px; color: var(--ink-faint); display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .meta b { color: var(--ink-dim); font-weight: 700; }
+  .dot { color: var(--ink-faint); }
+
+  /* ---- panel showpiece ---- */
+  .showcase { padding-block: 20px 72px; }
+  .panelcard {
+    max-width: 380px; margin-inline: auto;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 18px 18px 16px;
+    box-shadow: 0 30px 70px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .panel-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .panel-head .g { width: 42px; height: 48px; flex: none; }
+  .panel-head .t { display: flex; flex-direction: column; line-height: 1.25; }
+  .panel-head .t b { font-family: "Nunito", system-ui; font-weight: 800; font-size: 17px; }
+  .panel-head .t span { font-size: 12.5px; color: var(--ink-dim); }
+  .panel-head .gear { margin-left: auto; color: var(--ink-faint); }
+  .stash-label { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: .09em; font-weight: 800; color: var(--ink-faint); margin: 4px 2px 8px; font-family: "Nunito"; }
+  .stash-label .count { background: rgba(255,255,255,.08); color: var(--ink-dim); border-radius: 999px; padding: 1px 8px; letter-spacing: 0; }
+  .row { display: flex; align-items: center; gap: 11px; padding: 8px; border-radius: 10px; }
+  .row + .row { margin-top: 1px; }
+  .row .ic { width: 30px; height: 30px; border-radius: 7px; flex: none; display: grid; place-items: center; background: rgba(255,255,255,.06); color: var(--slate); }
+  .row .nm { font-size: 13.5px; font-weight: 600; }
+  .row .sub { font-size: 11.5px; color: var(--ink-faint); }
+  .row.sel { background: rgba(245,165,36,.14); outline: 1px solid rgba(245,165,36,.4); }
+  .dropzone {
+    margin-top: 10px; padding: 16px; border: 1px dashed var(--line-strong); border-radius: 12px;
+    text-align: center; font-size: 12.5px; color: var(--ink-faint);
+  }
+  .bars { display: inline-flex; gap: 2.5px; align-items: flex-end; height: 14px; margin-left: auto; }
+  .bars i { width: 2.5px; background: linear-gradient(var(--amber-soft), var(--amber)); border-radius: 2px; display: block; }
+
+  /* ---- features ---- */
+  .features { padding-block: 8px 20px; }
+  .sec-head { max-width: 40ch; margin: 0 auto 40px; text-align: center; display: grid; gap: 12px; justify-items: center; }
+  .sec-head h2 { margin: 0; font-size: clamp(28px, 4.4vw, 40px); font-weight: 800; letter-spacing: -.015em; text-wrap: balance; }
+  .sec-head p { margin: 0; color: var(--ink-dim); }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .feat {
+    background: var(--bg-raise); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 22px; display: grid; gap: 9px; align-content: start;
+  }
+  .feat .mark { width: 30px; height: 30px; color: var(--amber); margin-bottom: 4px; }
+  .feat h3 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
+  .feat p { margin: 0; font-size: 14.5px; color: var(--ink-dim); line-height: 1.55; }
+  .feat.wide { grid-column: span 2; }
+  @media (max-width: 760px) {
+    .grid { grid-template-columns: 1fr 1fr; }
+    .feat.wide { grid-column: span 2; }
+  }
+  @media (max-width: 480px) {
+    .grid { grid-template-columns: 1fr; }
+    .feat.wide { grid-column: span 1; }
+  }
+
+  /* ---- shortcuts strip ---- */
+  .keys { padding-block: 56px; }
+  .keys .wrap { display: grid; gap: 18px; }
+  .keys .krow { display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: center; }
+  .kbd-item { display: flex; align-items: center; gap: 10px; font-size: 14.5px; color: var(--ink-dim); }
+  kbd {
+    font-family: "Nunito", system-ui; font-weight: 800; font-size: 12.5px;
+    min-width: 24px; height: 24px; padding: 0 7px; border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--bg-raise); border: 1px solid var(--line-strong); color: var(--ink);
+    box-shadow: 0 1px 0 rgba(0,0,0,.6);
+  }
+  .kbd-item .kg { display: inline-flex; gap: 3px; }
+
+  /* ---- download ---- */
+  .download { padding-block: 30px 20px; }
+  .dlcard {
+    max-width: 640px; margin-inline: auto; text-align: center;
+    background: linear-gradient(180deg, var(--bg-raise), #0d0d0f);
+    border: 1px solid var(--line); border-radius: 24px; padding: 46px 30px;
+    display: grid; gap: 20px; justify-items: center;
+  }
+  .dlcard h2 { margin: 0; font-size: clamp(26px, 4vw, 34px); font-weight: 900; letter-spacing: -.02em; }
+  .dlcard .note {
+    font-size: 13px; color: var(--ink-faint); max-width: 46ch; line-height: 1.5;
+  }
+  .privacy {
+    margin-top: 8px; display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--ink-dim);
+    border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px;
+  }
+
+  footer { padding-block: 40px 60px; border-top: 1px solid var(--line); margin-top: 40px; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; }
+  footer .mark-w { display: flex; align-items: center; gap: 10px; font-family: "Nunito"; font-weight: 800; }
+  footer .mark-w .g { width: 22px; height: 25px; }
+  footer nav { display: flex; gap: 20px; font-size: 14px; color: var(--ink-dim); }
+  footer nav a { text-decoration: none; }
+  footer nav a:hover { color: var(--ink); }
+  footer .fine { width: 100%; font-size: 12.5px; color: var(--ink-faint); }
+
+  @keyframes blink { 0%,92%,100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  .ghost-hero { animation: float 5s ease-in-out infinite; }
+  .eye { transform-box: fill-box; transform-origin: center; animation: blink 6.5s infinite; }
+  @media (prefers-reduced-motion: reduce) {
+    .ghost-hero, .eye { animation: none; }
+    .btn:hover { transform: none; }
+  }
+</style>
+
+<!-- reusable ghost -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="ghost" viewBox="0 0 96 110">
+      <path d="M48 5 C25 5 12 22 12 46 L12 96 C12 101 16 103 20 100 L27 94 C30 91 34 91 37 94 L43 100 C46 103 50 103 53 100 L59 94 C62 91 66 91 69 94 L76 100 C80 103 84 101 84 96 L84 46 C84 22 71 5 48 5 Z"
+            fill="var(--ghost)"/>
+      <ellipse class="eye" cx="36" cy="52" rx="5.4" ry="7.8" fill="#111"/>
+      <ellipse class="eye" cx="60" cy="52" rx="5.4" ry="7.8" fill="#111"/>
+    </symbol>
+    <symbol id="ghost-mini" viewBox="0 0 96 110">
+      <path d="M48 5 C25 5 12 22 12 46 L12 96 C12 101 16 103 20 100 L27 94 C30 91 34 91 37 94 L43 100 C46 103 50 103 53 100 L59 94 C62 91 66 91 69 94 L76 100 C80 103 84 101 84 96 L84 46 C84 22 71 5 48 5 Z" fill="var(--ghost)"/>
+      <ellipse cx="36" cy="52" rx="5.4" ry="7.8" fill="#111"/>
+      <ellipse cx="60" cy="52" rx="5.4" ry="7.8" fill="#111"/>
+      <path d="M60 60 q4 3 4 8" stroke="#111" stroke-width="0" fill="none"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="menubar">
+  <span class="side l">Blink</span>
+  <div class="notch"><svg class="mini"><use href="#ghost-mini"/></svg></div>
+  <span class="side r"><span>􀊫</span><span>􀛨</span><span>9:41</span></span>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="ghost-stage">
+      <div class="halo"></div>
+      <svg class="ghost-hero" viewBox="0 0 96 110"><use href="#ghost"/></svg>
+    </div>
+    <span class="eyebrow">Mac companion · macOS 14+</span>
+    <h1>Blink</h1>
+    <p class="lede">A small ghost that lives in your notch and keeps your Stash — the things you're about to need, right where the cursor already goes.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/frjinjin12/blink-site/releases/latest/download/Blink-0.9.2.dmg">
+        Download for Mac <small>· 2.8 MB</small>
+      </a>
+      <a class="btn btn-ghost" href="#features">See what it does</a>
+    </div>
+    <p class="meta"><b>Apple silicon &amp; Intel</b><span class="dot">·</span><b>Notch optional</b><span class="dot">·</span><b>Local-only</b><span class="dot">·</span>v0.9.2 tester build</p>
+  </div>
+</header>
+
+<section class="showcase">
+  <div class="wrap">
+    <div class="panelcard" role="img" aria-label="The Blink panel: a Stash holding four things, with a jot field and a drop zone.">
+      <div class="panel-head">
+        <svg class="g"><use href="#ghost"/></svg>
+        <div class="t"><b>Holding 4 things</b><span>Morning.</span></div>
+        <svg class="gear" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></svg>
+      </div>
+      <div class="stash-label">STASH <span class="count">4</span> <span style="margin-left:auto;color:var(--ink-faint);font-weight:600;letter-spacing:0;">Clear all unpinned</span></div>
+      <div class="row sel">
+        <div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></div>
+        <div><div class="nm">Q3 planning.pdf</div><div class="sub">1.2 MB · just now</div></div>
+      </div>
+      <div class="row">
+        <div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 15l6-6M11 6l1-1a4 4 0 0 1 6 6l-1 1M13 18l-1 1a4 4 0 0 1-6-6l1-1"/></svg></div>
+        <div><div class="nm">figma.com/file/notch-ui</div><div class="sub">link · 2 min ago</div></div>
+      </div>
+      <div class="row">
+        <div class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div>
+        <div><div class="nm">Call Jordan — 6pm, bring the deck</div><div class="sub">note · 8 min ago</div></div>
+      </div>
+      <div class="row">
+        <div class="ic" style="background:linear-gradient(135deg,#3a2a55,#6d4a8f);color:#fff"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></div>
+        <div style="flex:1"><div class="nm" style="display:flex;align-items:center">Cover art.png <span class="bars"><i style="height:6px"></i><i style="height:12px"></i><i style="height:8px"></i><i style="height:14px"></i></span></div><div class="sub">image · 21 hr ago</div></div>
+      </div>
+      <div class="dropzone">Drop files, text or links here — or on Blink</div>
+    </div>
+  </div>
+</section>
+
+<section class="features" id="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">What it does</span>
+      <h2>A status light with a personality — and a shelf.</h2>
+      <p>Blink communicates through the notch, so you learn things at a glance and never have to open anything.</p>
+    </div>
+    <div class="grid">
+      <article class="feat wide">
+        <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2.5" y="4.5" width="19" height="15" rx="3"/><path d="M9 4.5h6v2a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 6.5z" fill="currentColor" stroke="none"/></svg>
+        <h3>Lives in the notch</h3>
+        <p>Blink tucks into the edge of the notch and peeks out when you hover — showing what it's holding without taking focus or covering your menu bar. It sleeps over full-screen apps, during a Focus, and while you present. Hover wakes it.</p>
+      </article>
+      <article class="feat">
+        <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7l8-4 8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4M4 17l8 4 8-4"/></svg>
+        <h3>Stash</h3>
+        <p>Drop files, text, links or images on Blink; drag them back out when you need them. Quick Look, pin, undo, and a 7-day Recently&nbsp;cleared. Your originals are never moved.</p>
+      </article>
+      <article class="feat">
+        <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="7" cy="17" r="3"/><circle cx="18" cy="15" r="3"/><path d="M10 17V6l11-2v11"/></svg>
+        <h3>Now Playing</h3>
+        <p>Music and Spotify, with cover-tinted sound bars in the notch. A mini player you can float on the desktop, dock beside the panel, or resize.</p>
+      </article>
+      <article class="feat">
+        <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3a9 9 0 1 0 9 9c-3 0-4-2-4-4s2-3 2-3a9 9 0 0 0-9-2z"/><circle cx="9" cy="10" r="1.1" fill="currentColor"/></svg>
+        <h3>Little reactions</h3>
+        <p>Follows the cursor, dozes late at night, hops when the charger clicks in, catches finished downloads. System events only — never what you type or which app is open.</p>
+      </article>
+      <article class="feat">
+        <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/></svg>
+        <h3>Three themes</h3>
+        <p>Notch&nbsp;Black grows out of the notch. Glass follows light and dark. Cozy is ice on navy with a faint room behind your things.</p>
+      </article>
+      <article class="feat wide">
+        <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/><path d="M9 12l2 2 4-4"/></svg>
+        <h3>Yours, and only on this Mac</h3>
+        <p>No accounts, no server, no analytics. Blink keeps references to your files and small copies of your clips in Application Support — nothing leaves the machine. It reads the Finder selection only when you ask, and the download folder only if you turn that on.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="keys">
+  <div class="wrap">
+    <div class="sec-head" style="margin-bottom:26px">
+      <span class="eyebrow">From anywhere</span>
+      <h2>Keyboard first.</h2>
+    </div>
+    <div class="krow" style="justify-content:center">
+      <span class="kbd-item"><span class="kg"><kbd>⌥</kbd><kbd>⇧</kbd><kbd>B</kbd></span> Open / close Blink</span>
+      <span class="kbd-item"><span class="kg"><kbd>⌃</kbd><kbd>⌥</kbd><kbd>J</kbd></span> Jot into Stash</span>
+      <span class="kbd-item"><span class="kg"><kbd>⌃</kbd><kbd>⌥</kbd><kbd>N</kbd></span> Add Finder selection</span>
+      <span class="kbd-item"><span class="kg"><kbd>⌃</kbd><kbd>⌥</kbd><kbd>V</kbd></span> Paste into Stash</span>
+      <span class="kbd-item"><span class="kg"><kbd>⌃</kbd><kbd>⌥</kbd><kbd>H</kbd></span> Hide / show</span>
+    </div>
+  </div>
+</section>
+
+<section class="download" id="download">
+  <div class="wrap">
+    <div class="dlcard">
+      <span class="eyebrow">Tester build</span>
+      <h2>Try Blink 0.9.2</h2>
+      <a class="btn btn-primary" href="https://github.com/frjinjin12/blink-site/releases/latest/download/Blink-0.9.2.dmg">Download the .dmg <small>· 2.8 MB</small></a>
+      <p class="note">macOS 14 (Sonoma) or later. This build isn't notarized yet, so the first time: drag Blink to Applications, then <b>right-click Blink → Open</b> and confirm once.</p>
+      <span class="privacy">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="1.8"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11z"/></svg>
+        Runs entirely on your Mac. No accounts, no tracking.
+      </span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span class="mark-w"><svg class="g"><use href="#ghost"/></svg> Blink</span>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#download">Download</a>
+      <a href="https://github.com/frjinjin12/blink-site/releases">Releases</a>
+    </nav>
+    <p class="fine">A small ghost in your notch that keeps your Stash. Built for macOS 14+. Tester build — expect rough edges, and tell us what breaks.</p>
+  </div>
+</footer>
